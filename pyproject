@@ -43,7 +43,6 @@ elif [ ! -d "$directory" ]; then
 fi
 
 # Handle Python version
-#version=$("python${version}" --version | awk '{print $2}')
 if [[ -n "$version" ]]; then
     # Construct the command to check Python version
     command="python$version --version"
@@ -77,22 +76,16 @@ fi
 
 # Example action with the directory, version, and preset
 echo "Initializing Python project in directory: $directory"
-#echo "Python version: $version"
-#echo "Project preset: $preset"
-# Add your initialization logic here
 
-# Example of creating a virtual environment in the specified directory
 "python$ver" -m venv "$directory/.venv"
 echo "Virtual environment created in $directory/.venv"
 
-# Activate the virtual environment
 source "$directory/.venv/bin/activate"
-# echo "Virtual environment activated."
 
+# Install essential packages
 echo "Installing essential packages (ruff, pycodestyle, mypy)"
 pip install ruff pycodestyle mypy
 
-# Example of installing packages based on preset (if provided)
 if [ -n "$preset" ]; then
     case $preset in
         "drf")
