@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# Function to display usage
+usage() {
+    echo "Usage: $0 [-v version] [-p preset] directory"
+    exit 1
+}
+
+# Default values
+version=""
+preset=""
+
+# Parse options
+while getopts ":v:p:" opt; do
+    case ${opt} in
+        v )
+            version=$OPTARG
+            ;;
+        p )
+            preset=$OPTARG
+            ;;
+        \? )
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND -1))
+
+# Get the directory positional argument
+directory=$1
+
+# Check if directory is provided
+if [ -z "$directory" ]; then
+    echo "Error: Directory argument is required."
+    usage
+fi
+
+# Create the directory if it does not exist
+if [ "$directory" = "." ]; then
+    directory=$(pwd)
+elif [ ! -d "$directory" ]; then
+    mkdir -p "$directory"
+fi
+
+# Handle Python version
+#version=$("python${version}" --version | awk '{print $2}')
+if [[ -n "$version" ]]; then
+    # Construct the command to check Python version
+    command="python$version --version"
+
+    # Execute the command and capture the output
+    output=$($command 2>&1)
+    ver=$version
+    version=$(echo $output | awk '{print $2}')
+
+    # Check if the command executed successfully
+    if [[ $? -eq 0 ]] && [ "$version" != "line" ]; then
+        echo "Using Python $version interpreter"
+    else
+        echo "Error: No Python interpeter for version '$ver' is installed."
+	exit
+    fi
+else
+    ver="3"
+    version=$(python3 --version | awk '{print $2}')
+    echo "Using Python $version interpreter"
+fi
+
+
+# Handle preset
+if [ -n "$preset" ]; then
+    echo "Using project preset: $preset"
+else
+    echo "No preset specified. Proceeding without a preset."
+fi
+
+
+# Example action with the directory, version, and preset
+echo "Initializing Python project in directory: $directory"
+#echo "Python version: $version"
+#echo "Project preset: $preset"
+# Add your initialization logic here
+
+# Example of creating a virtual environment in the specified directory
+"python$ver" -m venv "$directory/.venv"
+echo "Virtual environment created in $directory/.venv"
+
+# Activate the virtual environment
+source "$directory/.venv/bin/activate"
+# echo "Virtual environment activated."
+
+echo "Installing essential packages (ruff, pycodestyle, mypy)"
+pip install ruff pycodestyle mypy
+
+# Example of installing packages based on preset (if provided)
+if [ -n "$preset" ]; then
+    case $preset in
+        "drf")
+            echo "Installing Django REST Framework packages..."
+            pip install django django-cors-headers django-rest-framework
+            ;;
+        "data")
+            echo "Installing data science packages..."
+            pip install numpy pandas scipy
+            ;;
+        *)
+            echo "Unknown preset: $preset"
+            ;;
+    esac
+fi
+
+pip freeze > "$directory/requirements.txt"
+
+echo "Python project setup completed."
+
