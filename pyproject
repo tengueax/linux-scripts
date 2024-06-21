@@ -6,6 +6,10 @@ usage() {
     exit 1
 }
 
+
+gi() { curl -sLw "\n" https://www.toptal.com/developers/gitignore/api/$@ ;}
+
+
 # Default values
 version=""
 preset=""
@@ -76,6 +80,7 @@ fi
 
 # Example action with the directory, version, and preset
 echo "Initializing Python project in directory: $directory"
+git init $directory
 
 "python$ver" -m venv "$directory/.venv"
 echo "Virtual environment created in $directory/.venv"
@@ -90,6 +95,7 @@ if [ -n "$preset" ]; then
     case $preset in
         "drf")
             echo "Installing Django REST Framework packages..."
+	    gi python,django > "$directory/.gitignore"
             pip install django django-cors-headers django-rest-framework
             ;;
         "data")
@@ -100,6 +106,8 @@ if [ -n "$preset" ]; then
             echo "Unknown preset: $preset"
             ;;
     esac
+else
+	gi python > "$directory/.gitignore"
 fi
 
 pip freeze > "$directory/requirements.txt"
